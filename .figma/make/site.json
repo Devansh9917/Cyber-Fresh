@@ -1,0 +1,10 @@
+{
+  "description": "An AI-powered marketplace connecting customers, vendors, NGOs, and admins to reduce fruit and vegetable waste through smart discounts, inventory, and donations.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
