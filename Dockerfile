@@ -11,6 +11,7 @@ RUN npm install --prefix server
 COPY . .
 
 ARG VITE_API_URL
+ARG VITE_GOOGLE_CLIENT_ID
 RUN npm run build
 
 EXPOSE 3000
