@@ -1,19 +1,8 @@
 import express from 'express'
-import fs from 'fs'
-import path from 'path'
 import crypto from 'crypto'
-import { fileURLToPath } from 'url'
 import { protect, restrictTo } from '../middleware/auth.js'
 import User from '../models/User.js'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const uploadsDir = path.join(__dirname, '..', 'uploads')
-
-// Ensure uploads folder exists
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true })
-}
+import { uploadImageToCloudinary } from '../utils/cloudinary.js'
 
 const router = express.Router()
 
@@ -37,11 +26,6 @@ function hasExpectedImageSignature(buffer, mimeType) {
     return buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP'
   }
   return false
-}
-
-function getPublicUploadUrl(req, filename) {
-  const baseUrl = process.env.SERVER_PUBLIC_URL || `${req.protocol}://${req.get('host')}`
-  return `${baseUrl}/uploads/${filename}`
 }
 
 // POST /api/upload/profile-photo — Upload and attach profile photo
@@ -76,13 +60,11 @@ router.post('/profile-photo', protect, async (req, res) => {
       })
     }
 
-    const ext = ALLOWED_MIME_TYPES[detectedMime]
-    const filename = `avatar_${req.user._id}_${Date.now()}${ext}`
-    const filepath = path.join(uploadsDir, filename)
-
-    fs.writeFileSync(filepath, buffer)
-
-    const avatarUrl = getPublicUploadUrl(req, filename)
+    const publicId = `avatar_${req.user._id}_${Date.now()}`
+    const avatarUrl = await uploadImageToCloudinary(buffer, {
+      folder: 'cyber-fresh/avatars',
+      publicId,
+    })
 
     // Update user's avatar in MongoDB
     await User.findByIdAndUpdate(req.user._id, { avatar: avatarUrl })
@@ -137,13 +119,11 @@ router.post('/product-image', protect, restrictTo('vendor'), async (req, res) =>
       return res.status(400).json({ message: 'Invalid image data or file size exceeds 5MB.' })
     }
 
-    const ext = ALLOWED_MIME_TYPES[detectedMime]
-    const filename = `product_${crypto.randomBytes(8).toString('hex')}_${Date.now()}${ext}`
-    const filepath = path.join(uploadsDir, filename)
-
-    fs.writeFileSync(filepath, buffer)
-
-    const imageUrl = getPublicUploadUrl(req, filename)
+    const publicId = `product_${crypto.randomBytes(8).toString('hex')}_${Date.now()}`
+    const imageUrl = await uploadImageToCloudinary(buffer, {
+      folder: 'cyber-fresh/products',
+      publicId,
+    })
     res.json({ success: true, imageUrl })
   } catch (err) {
     console.error('Product image upload error:', err)
@@ -175,10 +155,11 @@ router.post('/vendor-payment-qr', protect, restrictTo('vendor'), async (req, res
       return res.status(400).json({ message: 'Invalid QR image or file size exceeds 5 MB.' })
     }
 
-    const ext = ALLOWED_MIME_TYPES[detectedMime]
-    const filename = `vendor_qr_${req.user._id}_${Date.now()}${ext}`
-    fs.writeFileSync(path.join(uploadsDir, filename), buffer)
-    const qrCodeUrl = getPublicUploadUrl(req, filename)
+    const publicId = `vendor_qr_${req.user._id}_${Date.now()}`
+    const qrCodeUrl = await uploadImageToCloudinary(buffer, {
+      folder: 'cyber-fresh/vendor-qr',
+      publicId,
+    })
     await User.findByIdAndUpdate(req.user._id, { 'paymentDetails.qrCodeUrl': qrCodeUrl })
     res.json({ success: true, qrCodeUrl, message: 'Vendor payout QR code uploaded.' })
   } catch (err) {

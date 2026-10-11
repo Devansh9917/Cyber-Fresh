@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react'
-import LandingPage from './components/LandingPage'
-import AuthLayout from './components/auth/AuthLayout'
-import CustomerPortal from './components/customer/CustomerPortal'
-import VendorPortal from './components/vendor/VendorPortal'
-import NGOPortal from './components/ngo/NGOPortal'
-import AdminPortal from './components/admin/AdminPortal'
-import DeliveryPartnerPortal from './components/delivery/DeliveryPartnerPortal'
-import PasswordResetPage from './components/auth/PasswordResetPage'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { logout as apiLogout } from './api/auth'
 import { api, getAuthToken } from './api/client'
 
-export default function App() {
+const LandingPage = lazy(() => import('./components/LandingPage'))
+const AuthLayout = lazy(() => import('./components/auth/AuthLayout'))
+const CustomerPortal = lazy(() => import('./components/customer/CustomerPortal'))
+const VendorPortal = lazy(() => import('./components/vendor/VendorPortal'))
+const NGOPortal = lazy(() => import('./components/ngo/NGOPortal'))
+const AdminPortal = lazy(() => import('./components/admin/AdminPortal'))
+const DeliveryPartnerPortal = lazy(() => import('./components/delivery/DeliveryPartnerPortal'))
+const PasswordResetPage = lazy(() => import('./components/auth/PasswordResetPage'))
+
+function AppContent() {
   const [state, setState] = useState(() =>
     window.location.pathname.startsWith('/reset-password/')
       ? 'password-reset'
@@ -166,4 +167,12 @@ export default function App() {
   if (state === 'delivery-app') return <DeliveryPartnerPortal onLogout={handleLogout} />
 
   return null
+}
+
+export default function App() {
+  return (
+    <Suspense fallback={<main className="flex min-h-screen items-center justify-center text-gray-600">Loading Cyber Fresh...</main>}>
+      <AppContent />
+    </Suspense>
+  )
 }

@@ -7,6 +7,7 @@
     "start": "node server.js",
     "create-admin": "node scripts/createAdmin.js",
     "cleanup-demo": "node scripts/cleanupDemoData.js",
+    "migrate:images": "node scripts/migrateImagesToCloudinary.js",
     "seed": "node seed/seed.js"
   },
   "dependencies": {

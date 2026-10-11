@@ -42,6 +42,26 @@ npm run dev    # starts on http://localhost:3000
 
 Sanity check: visit `http://localhost:3000/api/products` — you should see JSON.
 
+### Persistent image uploads
+
+Product images, profile photos, and vendor payment QR images are stored in
+Cloudinary so vendor uploads remain publicly available after Render restarts
+or redeploys. Configure `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+`CLOUDINARY_API_SECRET` in the backend environment. Never expose the API secret
+in a `VITE_*` variable.
+
+To migrate existing images that still exist in the local `server/uploads`
+folder, configure the production `MONGO_URI` and Cloudinary credentials in the
+root `.env`, then run this once from the project root:
+
+```bash
+npm --prefix server run migrate:images
+```
+
+The script updates MongoDB URLs for files it successfully uploads and reports
+local files that are missing. Missing files need to be uploaded again by their
+vendor.
+
 ### 2. Frontend
 
 ```bash
