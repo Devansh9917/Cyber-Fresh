@@ -10,6 +10,7 @@ RUN npm install --prefix server
 
 COPY . .
 
+ARG VITE_API_URL
 RUN npm run build
 
 EXPOSE 3000
